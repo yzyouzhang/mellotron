@@ -14,7 +14,7 @@ from model import load_model
 from data_utils import TextMelLoader, TextMelCollate
 from loss_function import Tacotron2Loss
 from logger import Tacotron2Logger
-from hparams import create_hparams
+# from hparams import create_hparams
 
 
 def reduce_tensor(tensor, n_gpus):
@@ -252,6 +252,13 @@ def train(output_directory, log_directory, checkpoint_path, warm_start, n_gpus,
 
 
 if __name__ == '__main__':
+    import json
+
+
+    class Struct:
+        def __init__(self, **entries):
+            self.__dict__.update(entries)
+
     parser = argparse.ArgumentParser()
     parser.add_argument('-o', '--output_directory', type=str,
                         help='directory to save checkpoints')
@@ -271,7 +278,12 @@ if __name__ == '__main__':
                         required=False, help='comma separated name=value pairs')
 
     args = parser.parse_args()
-    hparams = create_hparams(args.hparams)
+    # hparams = create_hparams(args.hparams)
+    with open("hparams.json") as f:
+        data = f.read()
+    global hparams
+    hparams = json.loads(data)["train_config"]
+    hparams = Struct(**hparams)
 
     torch.backends.cudnn.enabled = hparams.cudnn_enabled
     torch.backends.cudnn.benchmark = hparams.cudnn_benchmark
