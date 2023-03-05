@@ -8,6 +8,7 @@ from torch.nn import functional as F
 from layers import ConvNorm, LinearNorm
 from utils import to_gpu, get_mask_from_lengths
 from modules import GST
+from text.symbols import symbols
 
 drop_rate = 0.5
 
@@ -185,7 +186,7 @@ class Encoder(nn.Module):
 
     def forward(self, x, input_lengths):
         if x.size()[0] > 1:
-            print("here")
+            # print("here")
             x_embedded = []
             for b_ind in range(x.size()[0]):  # TODO: Speed up
                 curr_x = x[b_ind:b_ind+1, :, :input_lengths[b_ind]].clone()
@@ -562,7 +563,7 @@ class Tacotron2(nn.Module):
         self.fp16_run = hparams.fp16_run
         self.n_mel_channels = hparams.n_mel_channels
         self.n_frames_per_step = hparams.n_frames_per_step
-        n_symbols = 185
+        n_symbols = len(symbols)
         self.embedding = nn.Embedding(
             n_symbols, hparams.symbols_embedding_dim)
         std = sqrt(2.0 / (n_symbols + hparams.symbols_embedding_dim))
@@ -573,8 +574,8 @@ class Tacotron2(nn.Module):
         self.postnet = Postnet(hparams)
         if hparams.with_gst:
             self.gst = GST(hparams)
-        self.speaker_embedding = nn.Embedding(
-            hparams.n_speakers, hparams.speaker_embedding_dim)
+        self.speaker_embedding = nn.Linear(
+            512, hparams.speaker_embedding_dim)
 
     def parse_batch(self, batch):
         text_padded, input_lengths, mel_padded, gate_padded, \
@@ -610,7 +611,7 @@ class Tacotron2(nn.Module):
 
         embedded_inputs = self.embedding(inputs).transpose(1, 2)
         embedded_text = self.encoder(embedded_inputs, input_lengths)
-        embedded_speakers = self.speaker_embedding(speaker_ids)[:, None]
+        embedded_speakers = self.speaker_embedding(speaker_ids.float())[:, None]
         embedded_gst = self.gst(targets, output_lengths)
         embedded_gst = embedded_gst.repeat(1, embedded_text.size(1), 1)
         embedded_speakers = embedded_speakers.repeat(1, embedded_text.size(1), 1)

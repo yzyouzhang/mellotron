@@ -71,7 +71,9 @@ class TextMelLoader(torch.utils.data.Dataset):
         return (text, mel, speaker_id, f0)
 
     def get_speaker_id(self, speaker_id):
-        return torch.IntTensor([self.speaker_ids[int(speaker_id)]])
+        # return torch.IntTensor([self.speaker_ids[int(speaker_id)]])
+        return torch.load('/home/neil/c1_ex1/speaker_embeddings/c1_mls_resnet_tf512dim_spk_embed/%s_emb.pt' % speaker_id,
+                          map_location=torch.device('cuda'))
 
     def get_mel_and_f0(self, filepath):
         audio, sampling_rate = load_wav_to_torch(filepath)
@@ -141,7 +143,7 @@ class TextMelCollate():
         gate_padded = torch.FloatTensor(len(batch), max_target_len)
         gate_padded.zero_()
         output_lengths = torch.LongTensor(len(batch))
-        speaker_ids = torch.LongTensor(len(batch))
+        speaker_ids = torch.LongTensor(len(batch), 512)
         f0_padded = torch.FloatTensor(len(batch), 1, max_target_len)
         f0_padded.zero_()
 
