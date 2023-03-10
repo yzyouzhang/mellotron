@@ -15,8 +15,8 @@ def load_wav_to_torch(full_path):
     # sampling_rate, data = read(full_path)
     # return torch.FloatTensor(data.astype(np.float32)), sampling_rate
     waveform, sampling_rate = torchaudio.load(full_path, normalize=True)
-    waveform = torchaudio.functional.resample(waveform, orig_freq=sampling_rate, new_freq=16000)
-    return waveform.squeeze(0).float(), 16000 #sampling_rate
+    # waveform = torchaudio.functional.resample(waveform, orig_freq=sampling_rate, new_freq=16000)
+    return waveform.squeeze(0).float(), sampling_rate
 
 
 def load_filepaths_and_text(filename, split="|"):
