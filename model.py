@@ -586,7 +586,7 @@ class Tacotron2(nn.Module):
         mel_padded = to_gpu(mel_padded).float()
         gate_padded = to_gpu(gate_padded).float()
         output_lengths = to_gpu(output_lengths).long()
-        speaker_ids = to_gpu(speaker_ids.data).long()
+        speaker_ids = to_gpu(speaker_ids.data).float()
         f0_padded = to_gpu(f0_padded).float()
         return ((text_padded, input_lengths, mel_padded, max_len,
                  output_lengths, speaker_ids, f0_padded),
@@ -607,11 +607,13 @@ class Tacotron2(nn.Module):
     def forward(self, inputs):
         inputs, input_lengths, targets, max_len, \
             output_lengths, speaker_ids, f0s = inputs
+        # print(speaker_ids)
         input_lengths, output_lengths = input_lengths.data, output_lengths.data
 
         embedded_inputs = self.embedding(inputs).transpose(1, 2)
         embedded_text = self.encoder(embedded_inputs, input_lengths)
-        embedded_speakers = self.speaker_embedding(speaker_ids.float())[:, None]
+        # print(speaker_ids.dtype)
+        embedded_speakers = self.speaker_embedding(speaker_ids)[:, None]
         embedded_gst = self.gst(targets, output_lengths)
         embedded_gst = embedded_gst.repeat(1, embedded_text.size(1), 1)
         embedded_speakers = embedded_speakers.repeat(1, embedded_text.size(1), 1)
